@@ -1,0 +1,17 @@
+# format = "$git_branch$aws$go$directory$character"
+format = "$all"
+[aws]
+format = 'on [$symbol($profile )(\($region\) )]($style)'
+style = "bold yellow"
+symbol = " "
+
+[golang]
+symbol = " "
+style = "bold cyan"
+
+[git_branch]
+symbol = " "
+style = "bold fg:purple"
+
+[kubernetes]
+disabled = false
