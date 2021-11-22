@@ -38,4 +38,4 @@ source /usr/local/opt/asdf/libexec/asdf.fish
 
 # Simple Aliases:
 alias ls=exa
-alias hub=git
+alias git=hub
