@@ -6,6 +6,7 @@ end
 
 return require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
+  use 'lewis6991/impatient.nvim'
   -- Git
   use {
     { 'tpope/vim-fugitive', cmd = { 'Git', 'Gstatus', 'Gblame', 'Gpush', 'Gpull' }, disable = true },
