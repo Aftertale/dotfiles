@@ -1,0 +1,31 @@
+#!/bin/bash
+
+DATE_NOW_SECS=$(date -u -j +"%s")
+EXPIRY=""
+EXPIRY_SECS=""
+FILE=$(ls -t "${HOME}"/.aws/sso/cache/ | head -n1)
+REMAINING="00:00:00"
+PROFILE=$AWS_PROFILE
+
+time_delta()
+{
+        RE='^[0-9]+$'
+		EXPIRY=$(jq -r '.expiresAt' "${HOME}/.aws/sso/cache/${FILE}")
+        EXPIRY_SECS=$(date -u -j -f "%Y-%m-%dT%TZ" "${EXPIRY}" +"%s")
+		DELTA=$((EXPIRY_SECS - DATE_NOW_SECS))
+
+        if [[ $DELTA =~ $RE ]]
+        then
+            REMAINING=$(date -u -j -f "%s" "${DELTA}" +"%T")
+        fi
+
+		echo "(${REMAINING})"
+}
+
+if [[ -z $PROFILE ]]
+then
+	exit 1
+else
+	time_delta
+	exit 0
+fi
