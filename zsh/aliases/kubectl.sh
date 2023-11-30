@@ -12,6 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+function kubectl {
+  case "$@" in
+    *"-o yaml"*|*"-o=yaml"*)
+      /usr/local/bin/kubectl "$@" | yq '.'
+      ;;
+    *)
+      /usr/local/bin/kubectl "$@"
+      ;;
+  esac
+}
+
 alias kunhealthy="kgpo -o wide -A | egrep -v 'Completed|1/1|2/2|3/3|4/4|5/5|6/6|7/7'  | tee >&2 | wc -l"
 alias k='kubectl'
 alias ksys='kubectl --namespace=kube-system'
@@ -805,3 +817,6 @@ alias kgdepwowidesln='kubectl get deployment --watch -o=wide --show-labels --nam
 alias kgwslowiden='kubectl get --watch --show-labels -o=wide --namespace'
 alias kgpowslowiden='kubectl get pods --watch --show-labels -o=wide --namespace'
 alias kgdepwslowiden='kubectl get deployment --watch --show-labels -o=wide --namespace'
+
+## mine
+alias kcns='kubectl config set-context --current --namespace'

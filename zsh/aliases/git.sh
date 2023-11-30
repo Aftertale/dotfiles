@@ -7,6 +7,7 @@ alias gco="git checkout"
 alias ga="git add"
 alias gpl="git pull"
 alias gpr="git pull-request"
+
 function gp() {
   branchName=$(git rev-parse --abrev-ref HEAD)
   if [ "$branchName" = "main" ]; then
@@ -42,10 +43,18 @@ function git(){
       done
       ;;
 
+    "clone"*)
+      /usr/local/bin/hub clone "$2" && cd "${2##*/}"
+      ;;
+
     "pull-request -v")
       gh pr view --web
       ;;
       
+    "resync")
+      git_resync
+      ;;
+
     "unstage")
       gunstage
       ;;
@@ -67,14 +76,47 @@ function git(){
   esac
 }
 
+function git_resync(){
+  git stash
+  git pull
+  git stash pop
+}
+
 
 function gpr(){
-  # Get the most recent commit message
-  if [ -z $last_commit_message]; then
-    git pull-request
-    exit 0
+  if [[ -n "$1" ]]; then
+    case "$@" in
+      "-w"|"--wait")
+        # wait for checks to complete and return status
+        ;;
+      *)
+        git pull-request -m "$@"
+        return 0
+        ;;
+    esac
   fi
-  git pull-request -m $last_commit_message | pbcopy
+  # Get the most recent commit message
+  last_commit_message=$(git log -1 --pretty=%B)
+  if [ -z "$last_commit_message" ]; then
+    git pull-request
+    return 0
+  fi
+  git pull-request -m "\"$last_commit_message\"" | pbcopy
+}
+
+function waitForChecks {
+  # figure out how to make this not fucked by unescaped control characters
+  # Get ref before any actions that make a new commit
+  git_ref=$(git rev-parse HEAD)
+  echo "ref_name $git_ref"
+  repo_name=$(getRepo)
+  echo "repo name: $repo_name"
+  # check_status=$(gh api -G 'Accept: application/vnd.github.v3+json' "/repos/Updater/$repo/commits/$git_ref/check-suites")
+}
+
+function getRepo {
+  git_remote=${$(git remote get-url origin)##*/}
+  echo ${git_remote%%.*}
 }
 
 function gcmtest() {
@@ -100,9 +142,14 @@ function gcmtest() {
   done
 }
 
+function pathsTest() {
+  source $HOME/.config/zsh/util/paths.sh
+  shortenPath "$PWD"
+}
+
 function gcm() {
   current=$(pwd)
-  pushd $(git rev-parse --show-toplevel)
+  pushd $(git rev-parse --show-toplevel) > /dev/null
   changePath=$(git status | grep -e "modified" -e "new" -e "deleted" -m 1 | sed "s/.*: //g" | xargs)
   cmmessage="$argv[1](${changePath%/*}): ${argv[@]:2}"
   vared -p 'Is this message correct? [enter or edit] -> ' cmmessage
@@ -164,6 +211,11 @@ function alertRunFinished(){
   printf \\a
 }
 
-function setGitEnvVars(){
-  export GITHUB_TOKEN=$(op item get Github --field label=personal_token)
+function createPRandWaitForChecks() {
+
 }
+
+function setGitEnvVars(){
+  export GITHUB_TOKEN=$(op item get 'Github Personal Access Token' --field label=token)
+}
+source /Users/dillon.mcdowell/.config/op/plugins.sh
